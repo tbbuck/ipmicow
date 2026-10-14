@@ -12,9 +12,8 @@ No JRE. No Web Start. No *"Application Blocked by Java Security"*. Just moo.
 
 </div>
 
-<!-- Hero screenshot goes here once captured and vetted:
-<p align="center"><img src="docs/screenshot.png" width="720" alt="ipmicow showing a server's BIOS setup screen"></p>
--->
+<p align="center"><img src="docs/screenshot.png" width="720" alt="ipmicow showing a server's SysRq memory dump"></p>
+
 
 ## Why
 
