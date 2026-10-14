@@ -1,0 +1,66 @@
+name: Release
+
+# Push a tag like v0.1.0 to build binaries and publish a GitHub release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  macos:
+    name: macOS (universal)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - run: cargo build --release --locked --target aarch64-apple-darwin
+      - run: cargo build --release --locked --target x86_64-apple-darwin
+      - name: Package
+        run: |
+          mkdir -p dist/ipmicow
+          lipo -create -output dist/ipmicow/ipmicow \
+            target/aarch64-apple-darwin/release/ipmicow \
+            target/x86_64-apple-darwin/release/ipmicow
+          cp README.md LICENSE assets/LICENSE-noto-emoji.txt assets/fonts/OFL-Inter.txt dist/ipmicow/
+          tar -C dist -czf "ipmicow-${GITHUB_REF_NAME}-macos-universal.tar.gz" ipmicow
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: ipmicow-*.tar.gz
+
+  linux:
+    name: Linux (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev libx11-dev libxkbcommon-dev libwayland-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release --locked
+      - name: Package
+        run: |
+          mkdir -p dist/ipmicow
+          cp target/release/ipmicow README.md LICENSE assets/LICENSE-noto-emoji.txt assets/fonts/OFL-Inter.txt dist/ipmicow/
+          tar -C dist -czf "ipmicow-${GITHUB_REF_NAME}-linux-x86_64.tar.gz" ipmicow
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: ipmicow-*.tar.gz
+
+  publish:
+    needs: [macos, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" ipmicow-*.tar.gz --repo "$GITHUB_REPOSITORY" --generate-notes

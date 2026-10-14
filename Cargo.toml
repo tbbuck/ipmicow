@@ -1,0 +1,40 @@
+[package]
+name = "ipmicow"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.87"
+description = "Native consoles for ancient Java iKVMs: Supermicro X9 (ATEN) and IBM IMM2 (Avocent DVC)"
+authors = ["Thomas Buck"]
+license = "MIT"
+repository = "https://github.com/tbbuck/ipmicow"
+readme = "README.md"
+keywords = ["ipmi", "kvm", "bmc", "ikvm", "supermicro"]
+categories = ["command-line-utilities", "network-programming"]
+exclude = ["/.github", "/docs/*.png", "/docs/*.gif"]
+
+[dependencies]
+# native-tls (Secure Transport on macOS) is lenient enough for the BMC's crusty
+# 2013-era TLS; rustls refuses it. accept-invalid-certs handles the self-signed cert.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "native-tls"] }
+anyhow = "1"
+minifb = "0.27"
+# Rasterises the embedded keycap font for the "key sent" overlay.
+fontdue = "0.9"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+
+# Dock / Cmd-Tab icon, menu checkmarks, and the raw key-event monitor
+# (an Objective-C block) that replaces minifb's lossy macOS key mapping.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+# Maintained successor to the `block` crate (whose 0.1.6 trips a future-incompat lint).
+block2 = "0.6"
+
+# objc 0.2's macros reference an internal `feature = "cargo-clippy"` cfg that newer
+# rustc flags; we don't use it, so silence the noise.
+[lints.rust]
+unexpected_cfgs = { level = "allow" }
+
+# Pixel primitives naturally take (fb, w, h, x, y, ...) and the session threads
+# take their shared handles; bundling those into structs would only add noise.
+[lints.clippy]
+too_many_arguments = "allow"

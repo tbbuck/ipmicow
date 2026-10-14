@@ -1,0 +1,16 @@
+# Rust build output
+/target
+
+# Vendor viewers and libraries: re-fetchable from your BMC, never ours to commit
+*.jar
+*.jnilib
+*.so
+*.dll
+*.jnlp
+
+# Captures and decoded frames from `ipmicow debug`
+*.bin
+*.bmp
+*.log
+*.pcap
+*.pcapng
